@@ -39,7 +39,6 @@ def list_melons():
     """Return page showing all the melons ubermelon has to offer"""
 
     melons = model.Melon.get_all()
-    print melons
     return render_template("all_melons.html",
                            melon_list=melons)
 
@@ -64,7 +63,24 @@ def shopping_cart():
     # TODO: Display the contents of the shopping cart.
     #   - The cart is a list in session containing melons added
 
-    return render_template("cart.html")
+    melon_ids = session['cart']
+    melons = {}
+
+    for melon_id in melon_ids:
+        if model.Melon.get_by_id(melon_id).common_name in melons:
+            melons[model.Melon.get_by_id(melon_id).common_name][0] += 1
+        else:
+            melons[model.Melon.get_by_id(melon_id).common_name] = [1]
+            melons[model.Melon.get_by_id(melon_id).common_name].append(model.Melon.get_by_id(melon_id).price)
+
+
+    total = 0
+    list_of_lists = melons.values()
+    for item in list_of_lists:
+        total += item[0] * item[1]
+
+
+    return render_template("cart.html", total=total, melons=melons)
 
 
 @app.route("/add_to_cart/<int:id>")
@@ -75,10 +91,18 @@ def add_to_cart(id):
     page and display a confirmation message: 'Successfully added to cart'.
     """
 
+    print "added!"
+
     # TODO: Finish shopping cart functionality
     #   - use session variables to hold cart list
+    
+    if 'cart' in session:
+        session['cart'].append(id)
+    else:
+        session['cart'] = [id]
 
-    return "Oops! This needs to be implemented!"
+    flash('Added ' + str(model.Melon.get_by_id(id).common_name) + " to your cart!")
+    return render_template('cart.html')
 
 
 @app.route("/login", methods=["GET"])
@@ -117,5 +141,9 @@ def checkout():
     return redirect("/melons")
 
 
+app.secret_key = 'A0Zr98j/3yX R~XHH!jmN]LWX/,?RT'
+
 if __name__ == "__main__":
     app.run(debug=True)
+
+
