@@ -67,17 +67,18 @@ def shopping_cart():
     melons = {}
 
     for melon_id in melon_ids:
-        if model.Melon.get_by_id(melon_id).common_name in melons:
-            melons[model.Melon.get_by_id(melon_id).common_name][0] += 1
+        melon = model.Melon.get_by_id(melon_id)
+
+        if melon in melons:
+            melons[melon.common_name][0] += 1
         else:
-            melons[model.Melon.get_by_id(melon_id).common_name] = [1]
-            melons[model.Melon.get_by_id(melon_id).common_name].append(model.Melon.get_by_id(melon_id).price)
+            melons[melon.common_name] = [1, melon.price]
 
-
+    # total = sum(item[0] * item[1] for item in melons.values())
+    
     total = 0
-    list_of_lists = melons.values()
-    for item in list_of_lists:
-        total += item[0] * item[1]
+    for qty, price in melons.values():
+        total += qty * price
 
 
     return render_template("cart.html", total=total, melons=melons)
